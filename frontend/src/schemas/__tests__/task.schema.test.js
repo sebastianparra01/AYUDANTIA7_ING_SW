@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createTaskSchema } from '../task.schema';
+import { createTaskSchema, updateTaskSchema } from '../task.schema';
 
 // Pruebas unitarias para validar las reglas del esquema Zod de tareas
 describe('Pruebas unitarias: createTaskSchema (Zod)', () => {
@@ -121,4 +121,50 @@ describe('Pruebas unitarias: createTaskSchema (Zod)', () => {
   //   const result = createTaskSchema.safeParse(invalidData);
   //   expect(result.success).toBe(true);
   // });
+});
+
+describe('Pruebas unitarias: updateTaskSchema (Zod)', () => {
+  it('debe validar datos correctos para actualizar una tarea', () => {
+    const validData = {
+      title: 'Estudiar para el certamen',
+      description: 'Repasar React Hook Form y esquemas Zod',
+      completed: true,
+    };
+
+    const result = updateTaskSchema.safeParse(validData);
+
+    expect(result.success).toBe(true);
+  });
+
+  it('debe permitir omitir la descripción y el estado completed', () => {
+    const validData = {
+      title: 'Comprar cuaderno',
+    };
+
+    const result = updateTaskSchema.safeParse(validData);
+
+    expect(result.success).toBe(true);
+  });
+
+  it('debe rechazar un título con menos de 3 caracteres', () => {
+    const result = updateTaskSchema.safeParse({ title: 'AB' });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const titleError = result.error.issues.find((issue) => issue.path.includes('title'));
+      expect(titleError).toBeDefined();
+      expect(titleError.message).toBe('El título debe tener al menos 3 caracteres');
+    }
+  });
+
+  it('debe rechazar un título que supere los 150 caracteres', () => {
+    const result = updateTaskSchema.safeParse({ title: 'A'.repeat(151) });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const titleError = result.error.issues.find((issue) => issue.path.includes('title'));
+      expect(titleError).toBeDefined();
+      expect(titleError.message).toBe('El título no puede superar los 150 caracteres');
+    }
+  });
 });
